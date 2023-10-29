@@ -1,0 +1,76 @@
+---
+title: "Multiple linear regression analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Multiple linear regression analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(MATH5773Project2)
+```
+
+# Introduction
+Multiple linear regression is employed to predict a response variable based on several independent variables. To discover the intricate relationships among these variables, both residual analysis and data visualization were analyzed. The analyze_residuals function concentrates on residuals—differences between observed and predicted values to give insights into the regression model's quality. This function formulates two versions of the model: a simple model and a model with interactions, followed by the generation of respective plots and summaries. On the other hand, the plot_data_summary function determine the significance of visual representation in regression analysis where it created scatter plots for continuous variables and box plots for categorical variables. This function also capture summaries of both complete and reduced models via ANOVA. Also, these functions are used to enhance the understanding of multiple linear regression with effect of model parameter.
+
+
+## Analyze Residuals from Multiple Linear Regression ("analyze_residuals")
+The analyze_residuals function helps users examine residuals in multiple linear regression models. The function starts by focusing on the essential data based on the provided variables. It first creates a basic 'Reduced Model' without considering the interactions between predictors. Then, it builds a more detailed 'Full Model with Interactions' that factors in those interactions. The function "analyze_residuals" also produce visual plots showing residuals for both models. The function also provides a thorough statistical summary for both models, covering key metrics like coefficients and R-squared values. Finally, it returns a summary list, including both models, their AIC values, and the residual plots.
+
+## Plot and Summarize Data for MLR Analysis ("plot_data_summary)
+
+The plot_data_summary function is designed for visualizing and summarizing data in the multiple linear regression analysis. Initially, the function filters the data, ensuring it incorporates only the dependent and independent variables. It first creates a basic 'Reduced Model' without considering the interactions between predictors. Then, it builds a more detailed 'Full Model with Interactions' that factors in those interactions. Moreover, the function provides summary for individual model. Later it performs ANOVA test on reduced model against the full model, assessing whether the interaction terms offers a improved model's accuracy.
+
+The function also plot a scatter plots for continuous variables. These plots, complete with a linear trend, spotlight the relationship between the dependent and the independent variables. In contrast, categorical variables are represented through box plots. These box plots depict the distribution of the dependent variable across different categories but also show the data spread, medians, and outliers.
+
+
+## Example (Book exercise 12.51)
+The interaction between Time and Nutrients is not significant, which means the rate of increase in methane emission over time does not differ between the two sludge types, So, the null hypothesis are-
+\[H_0: \beta_{interaction} = 0 \]
+\[H_a: \beta_{interaction} \neq 0\]
+
+```{r, fig.width=6, fig.height=5}
+s = sludge
+analyze_residuals(s, "CH4", c("TIME", "VHA.Added"))
+plot_data_summary(s, "CH4", c("TIME", "VHA.Added"))
+```
+
+As the p value for interaction terms are 0.00333 which less than the $\alpha =0.05$, we can reject the null hypothesis as the interaction is not significant. The emission rates differ for the two types of sludge, and the rate of increase in methane emission over time is higher for the sludge with nutrients added compared to the sludge without nutrients. 
+
+### An estimate of each emission rate
+The full model are-
+\[ \text{Emission rate} = -136.9791 + 6.7193*\text{TIME} - 27.5096* \text{VHA.AddedYes} + 3.0385* \text{TIME:VHA.AddedYes} \]
+For sludge without nutrients (VHA = No): The emission rate is approximately $\beta_1 =$ 6.7193 milligrams/L/day.
+For sludge with nutrients (VHA = Yes): The emission rate is approximately $\beta_1 + \beta_3 = 6.7193 + 3.0385 =$ 9.7578 milligrams/L/day.
+
+Also, according to the AIC, the full model has a lower AIC value than the reduced model. This means that the full model is a better fit to the data, considering both its explanatory power and its complexity, compared to the reduced model.
+
+
+The interpretation of the coefficients:
+For each unit increase in TIME, the dependent variable increases by the beta estimate (6.7193 for the full model and 8.24 for the reduced model) units, assuming all other variables are constant.
+In the full model, the presence of "VHA.AddedYes" decreases the dependent variable by 27.5096 units compared to its absence, assuming other variables remain constant. In the reduced model, its presence increases the dependent variable by 79.29 units compared to its absence.
+VHA.AddedYes (Interaction Term in the Full Model): This coefficient (3.0385) indicates that the rate of change in the dependent variable with respect to TIME differs by this amount between the two groups (defined by VHA.AddedYes).
+Manually calculated beta estimate showing the same values.
+```{r}
+X <- model.matrix(~ s$TIME * s$VHA)
+beta <- solve(t(X) %*% X) %*% t(X) %*% s$CH4
+print("The beta estimate for the full model")
+print(beta)
+
+X1 <- model.matrix(~ s$TIME + s$VHA)
+beta1 <- solve(t(X1) %*% X1) %*% t(X1) %*% s$CH4
+print("The beta estimate for the reduced model")
+print(beta1)
+```
+
+
+## Conclusions
+Using multiple linear regression, this analysis explored the effects of Time and nutrient addition on methane emission rates using "analyze_residuals", "plot_data_summary" function. The interaction between Time and Nutrients was found to be non-significant, yet methane emission rates were higher for nutrient-enriched sludge. Without nutrients, emissions were about 6.7193 milligrams/L/day, rising to 9.7578 with nutrients. The full model, having a lower AIC value, was superior than the reduced model. These findings highlight the significant influence of nutrients on methane emissions and underscore the importance of careful sludge management. Also, both of the functions are working and giving appropriate result to come up with a conclusions.
